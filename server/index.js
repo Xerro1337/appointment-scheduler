@@ -44,6 +44,42 @@ app.post("/appointments", async (req, res) => {
     }
 });
 
+app.delete("/appointments/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await pool.query(
+            "DELETE FROM appointments WHERE id = $1",
+            [id]
+        );
+
+        res.json({ message: "Appointment deleted" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+app.patch("/appointments/:id/status", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const result = await pool.query(
+            `UPDATE appointments
+             SET status = $1
+             WHERE id = $2
+             RETURNING *`,
+            [status, id]
+        );
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 app.listen(5000, () => {
     console.log("Server running on port 5000");
 });
