@@ -58,16 +58,37 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create appointment");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create appointment");
       }
 
       setMessage("Appointment created successfully!");
       setForm({ name: "", email: "", appointment_date: "" });
       fetchAppointments();
     } catch (error) {
-      setMessage("Something went wrong");
+      setMessage(error.message)
       console.error(error);
     }
+  }
+
+  async function deleteAppointment(id) {
+    await fetch(`http://localhost:5000/appointments/${id}`, {
+      method: "DELETE"
+    });
+
+    fetchAppointments();
+  }
+
+  async function updateStatus(id, status) {
+    await fetch(`http://localhost:5000/appointments/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status })
+    });
+
+    fetchAppointments();
   }
 
   return (
@@ -92,6 +113,19 @@ function App() {
             <p>{appointment.email}</p>
             <p>{new Date(appointment.appointment_date).toLocaleString()}</p>
             <p>Status: {appointment.status}</p>
+            <div className="card-actions">
+              <button onClick={() => updateStatus(appointment.id, "confirmed")}>
+                Confirm
+              </button>
+
+              <button onClick={() => updateStatus(appointment.id, "cancelled")}>
+                Cancel
+              </button>
+
+              <button onClick={() => deleteAppointment(appointment.id)}>
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>

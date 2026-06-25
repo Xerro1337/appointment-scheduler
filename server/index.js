@@ -30,11 +30,38 @@ app.post("/appointments", async (req, res) => {
     try {
         const { name, email, appointment_date } = req.body;
 
+        if (!name || !email || !appointment_date) {
+            return res.status(400).json({
+                error: "Name, email and appointment date are required"
+            });
+        }
+
+        if (name.trim().length < 2) {
+            return res.status(400).json({
+                error: "Name must be at least 2 characters long"
+            });
+        }
+
+        if (!email.includes("@")) {
+            return res.status(400).json({
+                error: "Invalid email address"
+            });
+        }
+
+        const appointmentDate = new Date(appointment_date);
+        const now = new Date();
+
+        if (appointmentDate <= now) {
+            return res.status(400).json({
+                error: "Appointment date must be in the future"
+            });
+        }
+
         const result = await pool.query(
             `INSERT INTO appointments (name, email, appointment_date)
              VALUES ($1, $2, $3)
              RETURNING *`,
-            [name, email, appointment_date]
+            [name.trim(), email.trim(), appointment_date]
         );
 
         res.status(201).json(result.rows[0]);
