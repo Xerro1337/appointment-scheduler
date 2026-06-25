@@ -20,3 +20,16 @@ button {
 button {
   cursor: pointer;
 }
+
+.appointments {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appointment-card {
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
