@@ -21,6 +21,7 @@ function App() {
   const [adminDateFilter, setAdminDateFilter] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [bookingStep, setBookingStep] = useState(1);
   const [message, setMessage] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -184,6 +185,7 @@ function App() {
       setAvailableSlots([]);
       setShowConfirmation(false);
       fetchAppointments();
+      setBookingStep(1);
     } catch (error) {
       setMessage(error.message);
       setShowConfirmation(false);
@@ -215,18 +217,33 @@ function App() {
     setTheme(theme === "light" ? "dark" : "light");
   }
 
-  const canSubmit =
-    form.name.trim() &&
-    form.phone.trim() &&
-    form.email.trim() &&
-    form.appointment_date &&
-    form.appointment_slot;
-
   const filteredAppointments = adminDateFilter
   ? appointments.filter((appointment) =>
       appointment.appointment_date === adminDateFilter
     )
   : appointments;
+
+  function goToNextStep() {
+    if (bookingStep < 3) {
+      setBookingStep(bookingStep + 1);
+    }
+  }
+
+  function goToPreviousStep() {
+    if (bookingStep > 1) {
+      setBookingStep(bookingStep - 1);
+    }
+  }
+
+  const canGoNextFromStepOne = form.appointment_date;
+  const canGoNextFromStepTwo = form.appointment_slot;
+
+  const canSubmit =
+    form.name.trim() &&
+    form.email.trim() &&
+    form.phone.trim() &&
+    form.appointment_date &&
+    form.appointment_slot;
 
   return (
     <main className="app">
@@ -273,90 +290,152 @@ function App() {
 
           <div className="booking">
             <form onSubmit={handleSubmit} className="form">
-              <label>
-                <span>Name</span>
-                <input
-                  name="name"
-                  placeholder="John Doe"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Phone</span>
-
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="+1 234 567 890"
-                  value={form.phone}
-                  onChange={handleChange}
-                  pattern="^\+?[0-9\s\-()]{7,20}$"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Email</span>
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="john@mail.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Date</span>
-
-                <input
-                  name="appointment_date"
-                  type="date"
-                  value={form.appointment_date}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <div className="form-field">
-                <span>Available slots</span>
-
-                <div className="slot-list">
-                  {availableSlots.length === 0 ? (
-                    <p className="empty-slots">
-                      Select a date
-                    </p>
-                  ) : (
-                    availableSlots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        className={
-                          form.appointment_slot === String(slot.id)
-                            ? "slot-button selected"
-                            : "slot-button"
-                        }
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            appointment_slot: String(slot.id)
-                          })
-                        }
-                      >
-                        {slot.text}
-                      </button>
-                    ))
-                  )}
-                </div>
+              <div className="step-indicator">
+                <span className={bookingStep === 1 ? "active" : ""}>Date</span>
+                <span className={bookingStep === 2 ? "active" : ""}>Time</span>
+                <span className={bookingStep === 3 ? "active" : ""}>Contact</span>
               </div>
 
-              <button type="submit" className="form-submit-button" disabled={!canSubmit}>
-                Book{/* {canSubmit ? "Book" : "Complete the form"} */}
-              </button>
+              {bookingStep === 1 && (
+                <div className="booking-step">
+                  <label>
+                    <span>Date</span>
+
+                    <input
+                      name="appointment_date"
+                      type="date"
+                      value={form.appointment_date}
+                      onChange={handleChange}
+                      required
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className="form-submit-button"
+                    disabled={!canGoNextFromStepOne}
+                    onClick={goToNextStep}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
+              {bookingStep === 2 && (
+                <div className="booking-step">
+                  <div className="form-field">
+                    <span>Available slots</span>
+
+                    <div className="slot-list">
+                      {availableSlots.length === 0 ? (
+                        <p className="empty-slots">
+                          No available slots for this date
+                        </p>
+                      ) : (
+                        availableSlots.map((slot) => (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            className={
+                              form.appointment_slot === String(slot.id)
+                                ? "slot-button selected"
+                                : "slot-button"
+                            }
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                appointment_slot: String(slot.id)
+                              })
+                            }
+                          >
+                            {slot.text}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="step-actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={goToPreviousStep}
+                    >
+                      Back
+                    </button>
+
+                    <button
+                      type="button"
+                      className="form-submit-button"
+                      disabled={!canGoNextFromStepTwo}
+                      onClick={goToNextStep}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {bookingStep === 3 && (
+                <div className="booking-step">
+                  <label>
+                    <span>Name</span>
+
+                    <input
+                      name="name"
+                      placeholder="John Doe"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    <span>Email</span>
+
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="john@mail.com"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    <span>Phone</span>
+
+                    <input
+                      name="phone"
+                      type="tel"
+                      placeholder="+1 234 567 890"
+                      value={form.phone}
+                      onChange={handleChange}
+                      pattern="^\+?[0-9\s\-()]{7,20}$"
+                      required
+                    />
+                  </label>
+
+                  <div className="step-actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={goToPreviousStep}
+                    >
+                      Back
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="form-submit-button"
+                      disabled={!canSubmit}
+                    >
+                      Book
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
 
@@ -400,15 +479,18 @@ function App() {
                         </span>
                       </div>
 
-                      <p>
-                        {appointment.appointment_date} • {appointment.slot_text}
+                      <p className="appointment-date">
+                          {appointment.appointment_date} • {appointment.slot_text}
                       </p>
 
-                      <p>{appointment.email}</p>
-
-                      {appointment.phone && (
-                        <p>{appointment.phone}</p>
-                      )}
+                      <div className="appointment-contact">
+                          {appointment.phone && (
+                              <p>{appointment.phone}</p>
+                          )}
+                          {appointment.email && (
+                            <p>{appointment.email}</p>
+                          )}
+                      </div>
                     </div>
 
                     <div className="card-actions">
