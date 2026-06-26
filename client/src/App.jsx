@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+const appointmentSlots = {
+  1: "09:00–12:00",
+  2: "13:00–16:00",
+  3: "17:00–20:00"
+};
+
 function App() {
   const [form, setForm] = useState({
     name: "",
@@ -10,9 +16,18 @@ function App() {
     appointment_slot: ""
   });
 
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [adminDateFilter, setAdminDateFilter] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [message, setMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const [loginForm, setLoginForm] = useState({
+    login: "",
+    password: ""
+  });
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
@@ -89,19 +104,66 @@ function App() {
     }
   }
 
-  async function handleSubmit(event) {
+  function handleLoginChange(event) {
+    setLoginForm({
+      ...loginForm,
+      [event.target.name]: event.target.value
+    });
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    setShowConfirmation(true);
+  }
+
+  function handleLogout() {
+    setIsAdmin(false);
+    setMessage("Admin mode disabled");
+  }
+
+  async function handleLogin(event) {
     event.preventDefault();
 
     try {
+      const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(loginForm)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      setIsAdmin(true);
+      setShowLoginModal(false);
+      setLoginForm({
+        login: "",
+        password: ""
+      });
+      setMessage("Admin mode enabled");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function confirmAppointment() {
+    try {
+      const payload = {
+        ...form,
+        appointment_slot: Number(form.appointment_slot)
+      };
+
       const response = await fetch("http://localhost:5000/appointments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          ...form,
-          appointment_slot: Number(form.appointment_slot)
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -110,6 +172,7 @@ function App() {
       }
 
       setMessage("Appointment created successfully!");
+
       setForm({
         name: "",
         email: "",
@@ -119,9 +182,11 @@ function App() {
       });
 
       setAvailableSlots([]);
+      setShowConfirmation(false);
       fetchAppointments();
     } catch (error) {
       setMessage(error.message);
+      setShowConfirmation(false);
       console.error(error);
     }
   }
@@ -157,26 +222,52 @@ function App() {
     form.appointment_date &&
     form.appointment_slot;
 
+  const filteredAppointments = adminDateFilter
+  ? appointments.filter((appointment) =>
+      appointment.appointment_date === adminDateFilter
+    )
+  : appointments;
+
   return (
     <main className="app">
       <header className="app-header">
         <h1>Appointment Scheduler</h1>
 
-        <div className="theme-control">
-          <span>Dark Theme</span>
+        <div className="header-controls">
+          <div className="theme-control">
+            <span>Dark Theme</span>
 
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={theme === "dark"}
-              onChange={toggleTheme}
-            />
-            <span className="slider"></span>
-          </label>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={theme === "dark"}
+                onChange={toggleTheme}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          {isAdmin ? (
+            <button
+              type="button"
+              className="login-button logged-in"
+              onClick={handleLogout}
+            >
+              Log out
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="login-button"
+              onClick={() => setShowLoginModal(true)}
+            >
+              Log in
+            </button>
+          )}
         </div>
       </header>
 
-      <div className="layout">
+      <div className={isAdmin ? "layout admin" : "layout"}>
         <section className="booking-column">
           <h2>Book an appointment</h2>
 
@@ -271,57 +362,166 @@ function App() {
 
           {message && <p className="message">{message}</p>}
         </section>
+        
+        {isAdmin && (
+          <section className="appointments-column">
+            <div className="appointments-title-row">
+              <h2>Appointments</h2>
+              <span className="counter">({filteredAppointments.length})</span>
+              <input
+                className="admin-date-filter"
+                type="date"
+                value={adminDateFilter}
+                onChange={(event) => setAdminDateFilter(event.target.value)}
+              />
 
-        <section className="appointments-column">
-          <div className="appointments-title-row">
-            <h2>Appointments</h2>
-            <span className="counter">({appointments.length})</span>
-          </div>
+              {adminDateFilter && (
+                <button
+                  type="button"
+                  className="clear-filter-button"
+                  onClick={() => setAdminDateFilter("")}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
 
-          <div className="appointments">
-            {appointments.length === 0 ? (
-              <p className="empty-state">No appointments yet.</p>
-            ) : (
-              appointments.map((appointment) => (
-                <article className="appointment-row" key={appointment.id}>
-                  <div className="appointment-main">
-                    <div className="appointment-name-row">
-                      <h3>{appointment.name}</h3>
-                      <span className={`status-badge ${appointment.status}`}>
-                        {appointment.status}
-                      </span>
+            <div className="appointments">
+              {filteredAppointments.length === 0 ? (
+                <p className="empty-state">No appointments yet.</p>
+              ) : (
+                filteredAppointments.map((appointment) => (
+                  <article className="appointment-row" key={appointment.id}>
+                    <div className="appointment-main">
+                      <div className="appointment-name-row">
+                        <h3>{appointment.name}</h3>
+                        <span className={`status-badge ${appointment.status}`}>
+                          {appointment.status}
+                        </span>
+                      </div>
+
+                      <p>
+                        {appointment.appointment_date} • {appointment.slot_text}
+                      </p>
+
+                      <p>{appointment.email}</p>
+
+                      {appointment.phone && (
+                        <p>{appointment.phone}</p>
+                      )}
                     </div>
 
-                    <p>
-                      {appointment.appointment_date} • {appointment.slot_text}
-                    </p>
+                    <div className="card-actions">
+                      <button onClick={() => updateStatus(appointment.id, "confirmed")}>
+                        Confirm
+                      </button>
 
-                    <p>{appointment.email}</p>
+                      <button onClick={() => updateStatus(appointment.id, "cancelled")}>
+                        Cancel
+                      </button>
 
-                    {appointment.phone && (
-                      <p>{appointment.phone}</p>
-                    )}
-                  </div>
-
-                  <div className="card-actions">
-                    <button onClick={() => updateStatus(appointment.id, "confirmed")}>
-                      Confirm
-                    </button>
-
-                    <button onClick={() => updateStatus(appointment.id, "cancelled")}>
-                      Cancel
-                    </button>
-
-                    <button onClick={() => deleteAppointment(appointment.id)}>
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </section>
+                      <button onClick={() => deleteAppointment(appointment.id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        )}
       </div>
+      {showConfirmation && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <h2>Confirm appointment</h2>
+
+            <div className="confirmation-details">
+              <p>
+                <span>Name:</span> {form.name}
+              </p>
+              <p>
+                <span>Email:</span> {form.email}
+              </p>
+              <p>
+                <span>Phone:</span> {form.phone}
+              </p>
+              <p>
+                <span>Date:</span> {form.appointment_date}
+              </p>
+              <p>
+                <span>Time:</span> {appointmentSlots[form.appointment_slot]}
+              </p>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="modal-confirm-button"
+                onClick={confirmAppointment}
+              >
+                Confirm
+              </button>
+
+              <button
+                type="button"
+                className="modal-cancel-button"
+                onClick={() => setShowConfirmation(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showLoginModal && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <h2>Admin login</h2>
+
+            <form onSubmit={handleLogin} className="login-form">
+              <label>
+                <span>Login</span>
+
+                <input
+                  name="login"
+                  value={loginForm.login}
+                  onChange={handleLoginChange}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Password</span>
+
+                <input
+                  name="password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={handleLoginChange}
+                  required
+                />
+              </label>
+
+              <div className="modal-actions">
+                <button
+                  type="submit"
+                  className="modal-confirm-button"
+                >
+                  Log in
+                </button>
+                <button
+                  type="button"
+                  className="modal-cancel-button"
+                  onClick={() => setShowLoginModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

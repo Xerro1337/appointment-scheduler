@@ -206,14 +206,21 @@ select {
 
 .layout {
   display: grid;
-  grid-template-columns: 25vw 1fr;
   min-height: calc(100vh - 81px);
+  grid-template-columns: 1fr;
   gap: 0;
   padding: 0;
 }
 
+.layout.admin {
+  grid-template-columns: 1fr 75vw;
+}
+
 .booking-column {
   background: var(--left-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 40px;
 }
 
@@ -363,6 +370,8 @@ input:focus {
 }
 
 .message {
+  width: 100%;
+  max-width: 400px;
   margin: 22px 0 0;
   padding: 10px 0 10px 14px;
   border-left: 3px solid var(--border);
@@ -370,6 +379,8 @@ input:focus {
 }
 
 .booking {
+  width: 100%;
+  max-width: 400px;
   padding: 18px;
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -578,6 +589,139 @@ input:focus {
   text-align: center;
   border: 1px dashed var(--border);
   border-radius: 6px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.confirmation-modal {
+  width: min(420px, 100%);
+  padding: 24px 38px;
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.3);
+}
+
+.confirmation-modal h2 {
+  margin: 0 0 18px;
+}
+
+.confirmation-details {
+  display: grid;
+  gap: 10px;
+}
+
+.confirmation-details p {
+  margin: 0;
+  text-align: left;
+  color: var(--secondary);
+}
+
+.confirmation-details span {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.modal-cancel-button,
+.modal-confirm-button {
+  width: 42%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-cancel-button {
+  background: var(--border);
+  color: var(--text);
+}
+
+.modal-confirm-button {
+  background: var(--accent);
+  color: white;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 42px;
+}
+
+.login-button {
+  padding: 9px 14px;
+  background: var(--accent);
+  color: white;
+  border: 0;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-button.logged-in {
+  background: #ef4444;
+}
+
+.login-button:hover {
+  filter: brightness(1.13);
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.login-form label span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-date-filter {
+  /* width: 170px; */
+  margin-left: 14px;
+  padding: 8px 10px;
+  font-size: 15px;
+}
+
+.clear-filter-button {
+  padding: 8px 12px;
+  background: var(--border);
+  color: var(--text);
+  border: 0;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clear-filter-button:hover {
+  filter: brightness(1.08);
 }
 
 @media (max-width: 850px) {
