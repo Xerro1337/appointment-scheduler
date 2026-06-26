@@ -240,6 +240,19 @@ h2 {
   gap: 18px;
 }
 
+.form-field {
+  display: grid;
+  gap: 7px;
+}
+
+.form-field span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .form label {
   display: grid;
   gap: 7px;
@@ -274,28 +287,79 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-button {
-  padding: 9px 13px;
-  background: var(--button-bg);
-  color: var(--button-text);
-  border: 0;
+.form-submit-button,
+.card-actions button,
+.slot-button {
   border-radius: 6px;
-  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   transition: 0.15s ease;
 }
 
-button:hover {
-  filter: brightness(1.13);
-}
-
-.form button {
+.form-submit-button {
   width: 80%;
   margin: 10px auto 0;
   padding: 11px 18px;
   background: var(--accent);
   color: white;
+  border: 0;
+  font-size: 18px;
+}
+
+.form-submit-button:hover {
+  filter: brightness(1.13);
+}
+
+.form-submit-button:disabled {
+  background: var(--border);
+  color: var(--secondary);
+  cursor: default;
+  filter: none;
+}
+
+.form-submit-button:disabled:hover {
+  filter: none;
+}
+
+.card-actions button {
+  width: 100%;
+  padding: 9px 13px;
+  color: #ffffff;
+  border: 0;
+  font-size: 18px;
+  box-shadow: 0 1px 4px rgba(17, 17, 17, 0.08);
+}
+
+.card-actions button:hover {
+  filter: brightness(1.13);
+}
+
+.slot-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 16px;
+  text-align: center;
+}
+
+.slot-button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--input-bg);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.slot-button.selected {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.slot-button.selected:hover {
+  color: white;
+  background: var(--accent);
 }
 
 .message {
@@ -476,6 +540,44 @@ button:hover {
 .switch input:checked + .slider::before {
   left: calc(100% - 3px);
   transform: translate(-100%, -50%);
+}
+
+.slot-list {
+  display: grid;
+  gap: 10px;
+}
+
+.slot-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.slot-button:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--input-bg));
+}
+
+.slot-button.selected {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.empty-slots {
+  margin: 0;
+  padding: 12px;
+  color: var(--secondary);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
 }
 
 @media (max-width: 850px) {

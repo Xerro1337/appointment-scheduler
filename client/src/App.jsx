@@ -5,9 +5,12 @@ function App() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    appointment_date: ""
+    phone: "",
+    appointment_date: "",
+    appointment_slot: ""
   });
 
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [message, setMessage] = useState("");
   const [theme, setTheme] = useState(() => {
@@ -37,6 +40,30 @@ function App() {
     }
   }
 
+  async function fetchAvailableSlots(date) {
+    if (!date) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/appointments/available-slots?date=${date}`
+      );
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      const data = await response.json();
+
+      setAvailableSlots(data.availableSlots);
+    } catch (error) {
+      console.error(error);
+      setAvailableSlots([]);
+    }
+  }
+
   useEffect(() => {
     fetchAppointments();
   }, []);
@@ -47,10 +74,19 @@ function App() {
   }, [theme]);
 
   function handleChange(event) {
-    setForm({
-      ...form,
-      [event.target.name]: event.target.value
-    });
+    const { name, value } = event.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "appointment_date"
+        ? { appointment_slot: "" }
+        : {})
+    }));
+
+    if (name === "appointment_date") {
+      fetchAvailableSlots(value);
+    }
   }
 
   async function handleSubmit(event) {
@@ -62,7 +98,10 @@ function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          appointment_slot: Number(form.appointment_slot)
+        })
       });
 
       if (!response.ok) {
@@ -71,7 +110,15 @@ function App() {
       }
 
       setMessage("Appointment created successfully!");
-      setForm({ name: "", email: "", appointment_date: "" });
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        appointment_date: "",
+        appointment_slot: ""
+      });
+
+      setAvailableSlots([]);
       fetchAppointments();
     } catch (error) {
       setMessage(error.message);
@@ -102,6 +149,13 @@ function App() {
   function toggleTheme() {
     setTheme(theme === "light" ? "dark" : "light");
   }
+
+  const canSubmit =
+    form.name.trim() &&
+    form.phone.trim() &&
+    form.email.trim() &&
+    form.appointment_date &&
+    form.appointment_slot;
 
   return (
     <main className="app">
@@ -140,6 +194,20 @@ function App() {
               </label>
 
               <label>
+                <span>Phone</span>
+
+                <input
+                  name="phone"
+                  type="tel"
+                  placeholder="+1 234 567 890"
+                  value={form.phone}
+                  onChange={handleChange}
+                  pattern="^\+?[0-9\s\-()]{7,20}$"
+                  required
+                />
+              </label>
+
+              <label>
                 <span>Email</span>
                 <input
                   name="email"
@@ -153,16 +221,51 @@ function App() {
 
               <label>
                 <span>Date</span>
+
                 <input
                   name="appointment_date"
-                  type="datetime-local"
+                  type="date"
                   value={form.appointment_date}
                   onChange={handleChange}
                   required
                 />
               </label>
 
-              <button type="submit">Book</button>
+              <div className="form-field">
+                <span>Available slots</span>
+
+                <div className="slot-list">
+                  {availableSlots.length === 0 ? (
+                    <p className="empty-slots">
+                      Select a date
+                    </p>
+                  ) : (
+                    availableSlots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        className={
+                          form.appointment_slot === String(slot.id)
+                            ? "slot-button selected"
+                            : "slot-button"
+                        }
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            appointment_slot: String(slot.id)
+                          })
+                        }
+                      >
+                        {slot.text}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <button type="submit" className="form-submit-button" disabled={!canSubmit}>
+                Book{/* {canSubmit ? "Book" : "Complete the form"} */}
+              </button>
             </form>
           </div>
 
@@ -189,8 +292,15 @@ function App() {
                       </span>
                     </div>
 
+                    <p>
+                      {appointment.appointment_date} • {appointment.slot_text}
+                    </p>
+
                     <p>{appointment.email}</p>
-                    <p>{new Date(appointment.appointment_date).toLocaleString()}</p>
+
+                    {appointment.phone && (
+                      <p>{appointment.phone}</p>
+                    )}
                   </div>
 
                   <div className="card-actions">
