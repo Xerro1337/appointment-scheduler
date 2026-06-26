@@ -1,35 +1,509 @@
-.container {
-  max-width: 500px;
-  margin: 80px auto;
-  padding: 24px;
-  font-family: Arial, sans-serif;
+@font-face {
+  font-family: "Europa Nuova";
+  src: url("/fonts/europanuovabold.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Thin.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ThinItalic.otf") format("opentype");
+  font-weight: 100;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ExtraLight.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ExtraLightItalic.otf") format("opentype");
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-SemiBoldItalic.otf") format("opentype");
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ExtraBoldItalic.otf") format("opentype");
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
+}
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: hsl(220, 14%, 96%);
+  --header-bg: hsl(221, 25%, 20%);
+  --left-bg: hsl(220, 13%, 91%);
+  --right-bg: hsl(210, 20%, 98%);
+  --card-bg: hsl(0, 0%, 100%);
+
+  --text: hsl(221, 10%, 22%);
+  --header-text: hsl(0, 0%, 100%);
+  --secondary: hsl(220, 9%, 46%);
+  --border: hsl(216, 12%, 84%);
+
+  --input-bg: hsl(0, 0%, 100%);
+  --button-bg: hsl(221, 83%, 53%);
+  --button-text: hsl(0, 0%, 100%);
+  --accent: hsl(221, 83%, 53%);
+}
+
+body.dark {
+  --bg: hsl(222, 47%, 11%);
+  --header-bg: hsl(222, 30%, 7%);
+  --left-bg: hsl(222, 40%, 12%);
+  --right-bg: hsl(222, 40%, 11%);
+  --card-bg: hsl(217, 33%, 17%);
+
+  --text: hsl(210, 40%, 98%);
+  --header-text: hsl(210, 40%, 98%);
+  --secondary: hsl(213, 27%, 84%);
+  --border: hsl(215, 25%, 27%);
+
+  --input-bg: hsl(222, 47%, 11%);
+  --button-bg: hsl(217, 91%, 60%);
+  --button-text: hsl(0, 0%, 100%);
+  --accent: hsl(217, 91%, 60%);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  /* font-family: "Europa Nuova", Arial, sans-serif; */
+  /* transition: 0.2s; */
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: "Europa Nuova", Arial, sans-serif;
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.app-header {
+  width: 100%;
+  padding: 28px 56px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--header-bg);
+  color: var(--header-text);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 25vw 1fr;
+  min-height: calc(100vh - 81px);
+  gap: 0;
+  padding: 0;
+}
+
+.booking-column {
+  background: var(--left-bg);
+  padding: 40px;
+}
+
+.appointments-column {
+  background: var(--right-bg);
+  padding: 40px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+h2 {
+  margin: 0 0 24px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 18px;
 }
 
-input,
-button {
-  padding: 12px;
+.form label {
+  display: grid;
+  gap: 7px;
+}
+
+.form label span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+input {
+  width: 100%;
+  padding: 12px 11px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   font-size: 16px;
+  outline: none;
+}
+
+input::placeholder {
+  color: var(--secondary);
+  opacity: 0.8;
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 button {
+  padding: 9px 13px;
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: 0;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
+  transition: 0.15s ease;
+}
+
+button:hover {
+  filter: brightness(1.13);
+}
+
+.form button {
+  width: 80%;
+  margin: 10px auto 0;
+  padding: 11px 18px;
+  background: var(--accent);
+  color: white;
+}
+
+.message {
+  margin: 22px 0 0;
+  padding: 10px 0 10px 14px;
+  border-left: 3px solid var(--border);
+  color: var(--secondary);
+}
+
+.booking {
+  padding: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.appointments-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.appointments-title-row h2 {
+  margin: 0;
+}
+
+.counter {
+  color: var(--secondary);
+  font-weight: 700;
 }
 
 .appointments {
-  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+}
+
+.empty-state {
+  margin: 0;
+  text-align: left;
+  font-weight: 100;
+  color: var(--secondary);
+}
+
+.appointment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  padding: 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.appointment-name-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
-.appointment-card {
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+.appointment-row h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.appointment-row p {
+  margin: 7px 0 0;
+  text-align: left;
+  color: var(--secondary);
+  line-height: 1.35;
+}
+
+.status-badge {
+  padding: 1px 10px;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: lowercase;
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(17, 17, 17, 0.08);
+}
+
+.status-badge.pending {
+  background: hsl(48, 96%, 53%);
+  color: hsl(48, 40%, 12%);
+}
+
+.status-badge.confirmed {
+  background: hsl(142, 71%, 45%);
+  color: hsl(142, 40%, 12%);
+}
+
+.status-badge.cancelled {
+  background: hsl(0, 84%, 58%);
+  color: hsl(0, 40%, 12%);
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.card-actions button {
+  width: 100%;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(17, 17, 17, 0.08);
+}
+
+.card-actions button:nth-child(1) {
+  background: #16a34a;
+}
+
+.card-actions button:nth-child(2) {
+  background: #f59e0b;
+}
+
+.card-actions button:nth-child(3) {
+  background: #ef4444;
+}
+
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--header-text);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #6b7280;
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: calc(100% - 6px);
+  aspect-ratio: 1 / 1;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .slider {
+  background: var(--accent);
+}
+
+.switch input:checked + .slider::before {
+  left: calc(100% - 3px);
+  transform: translate(-100%, -50%);
+}
+
+@media (max-width: 850px) {
+  .app-header {
+    padding: 28px 24px 18px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .booking-column,
+  .appointments-column {
+    padding: 32px 24px;
+  }
+
+  .appointments {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions {
+    align-items: stretch;
+  }
 }
