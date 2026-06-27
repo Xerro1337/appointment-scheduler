@@ -180,7 +180,7 @@ input:focus {
   border-radius: 6px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.15s ease;
+  /* transition: 0.15s ease; */
 }
 
 .step-actions {
@@ -533,18 +533,18 @@ body.dark input[type="date"]::-webkit-calendar-picker-indicator {
 
 .confirmation-details {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .confirmation-details p {
   margin: 0;
   text-align: left;
-  color: var(--secondary);
+  color: var(--text);
 }
 
 .confirmation-details span {
   font-weight: 700;
-  color: var(--text);
+  color: var(--secondary);
 }
 
 .modal-actions {
@@ -660,6 +660,67 @@ body.dark input[type="date"]::-webkit-calendar-picker-indicator {
 .booking-step {
   display: grid;
   gap: 18px;
+}
+
+.notification {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  z-index: 200;
+
+  min-width: 320px;
+  max-width: 500px;
+
+  padding: 14px 20px;
+
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+
+  border-radius: 10px;
+
+  opacity: 0;
+
+  animation:
+    notification-in 0.25s ease forwards,
+    notification-out 0.35s ease 4.65s forwards;
+}
+
+.notification-success {
+  background: #15803d;
+  border: 1px solid #4ade80;
+}
+
+.notification-error {
+  background: #b91c1c;
+  border: 1px solid #f87171;
+}
+
+@keyframes notification-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes notification-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
 }
 
 @media (max-width: 850px) {

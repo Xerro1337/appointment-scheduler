@@ -1,12 +1,8 @@
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
 
 const APPOINTMENT_SLOTS = {
     1: "09:00–12:00",
@@ -14,21 +10,79 @@ const APPOINTMENT_SLOTS = {
     3: "17:00–20:00"
 };
 
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+function getToday(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+function authenticateAdmin(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            error: "Authorization header is missing"
+        });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({
+            error: "Token is missing"
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.role !== "admin") {
+            return res.status(403).json({
+                error: "Access denied"
+            });
+        }
+
+        next();
+    } catch (err) {
+        return res.status(401).json({
+            error: "Invalid or expired token"
+        });
+    }
+}
+
 app.post("/login", (req, res) => {
     const { login, password } = req.body;
 
     if (
-        login === process.env.ADMIN_LOGIN &&
-        password === process.env.ADMIN_PASSWORD
+        login !== process.env.ADMIN_LOGIN ||
+        password !== process.env.ADMIN_PASSWORD
     ) {
-        return res.json({
-            success: true
+        return res.status(401).json({
+            success: false,
+            error: "Invalid login or password"
         });
     }
 
-    res.status(401).json({
-        success: false,
-        error: "Invalid login or password"
+    const token = jwt.sign(
+        {
+            role: "admin"
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "2h"
+        }
+    );
+
+    res.json({
+        success: true,
+        token
     });
 });
 
@@ -36,11 +90,19 @@ app.get("/", (req, res) => {
     res.json({ message: "Appointment Scheduler API" });
 });
 
-app.get("/appointments", async (req, res) => {
+app.get("/appointments", authenticateAdmin, async (req, res) => {
     try {
         const result = await pool.query(
             `
-            SELECT *
+            SELECT
+                id,
+                name,
+                email,
+                phone,
+                TO_CHAR(appointment_date, 'YYYY-MM-DD') AS appointment_date,
+                appointment_slot,
+                status,
+                created_at
             FROM appointments
             ORDER BY appointment_date, appointment_slot
             `
@@ -48,7 +110,6 @@ app.get("/appointments", async (req, res) => {
 
         const appointments = result.rows.map((appointment) => ({
             ...appointment,
-            appointment_date: appointment.appointment_date.toISOString().split("T")[0],
             slot_text: APPOINTMENT_SLOTS[appointment.appointment_slot]
         }));
 
@@ -72,6 +133,53 @@ app.get("/appointments/available-slots", async (req, res) => {
             });
         }
 
+        const today = getToday();
+
+        if (date < today) {
+            return res.status(400).json({
+                error: "Date cannot be in the past"
+            });
+        }
+
+        const slots = [
+            {
+                id: 1,
+                text: "09:00–12:00",
+                startHour: 9
+            },
+            {
+                id: 2,
+                text: "13:00–16:00",
+                startHour: 13
+            },
+            {
+                id: 3,
+                text: "17:00–20:00",
+                startHour: 17
+            }
+        ];
+
+        const now = new Date();
+
+        const availableByTime = slots.filter((slot) => {
+            if (date !== today) {
+                return true;
+            }
+
+            const [year, month, day] = date.split("-").map(Number);
+
+            const slotStart = new Date(
+                year,
+                month - 1,
+                day,
+                slot.startHour,
+                0,
+                0
+            );
+
+            return slotStart > now;
+        });
+
         const result = await pool.query(
             `
             SELECT appointment_slot
@@ -83,16 +191,9 @@ app.get("/appointments/available-slots", async (req, res) => {
 
         const bookedSlots = result.rows.map((row) => row.appointment_slot);
 
-        const availableSlots = [];
-
-        for (let slot = 1; slot <= 3; slot++) {
-            if (!bookedSlots.includes(slot)) {
-                availableSlots.push({
-                    id: slot,
-                    text: APPOINTMENT_SLOTS[slot]
-                });
-            }
-        }
+        const availableSlots = availableByTime.filter((slot) => {
+            return !bookedSlots.includes(slot.id);
+        });
 
         res.json({
             date,
@@ -117,6 +218,12 @@ app.post("/appointments", async (req, res) => {
             appointment_date,
             appointment_slot
         } = req.body;
+
+        if (appointment_date < getToday()) {
+            return res.status(400).json({
+                error: "Appointment date cannot be in the past"
+            });
+        }
 
         if (
             !name ||
@@ -203,7 +310,7 @@ app.post("/appointments", async (req, res) => {
     }
 });
 
-app.delete("/appointments/:id", async (req, res) => {
+app.delete("/appointments/:id", authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -219,7 +326,7 @@ app.delete("/appointments/:id", async (req, res) => {
     }
 });
 
-app.patch("/appointments/:id/status", async (req, res) => {
+app.patch("/appointments/:id/status", authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;

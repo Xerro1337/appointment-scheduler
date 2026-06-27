@@ -16,13 +16,14 @@ function App() {
     appointment_slot: ""
   });
 
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [adminDateFilter, setAdminDateFilter] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [notification, setNotification] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [bookingStep, setBookingStep] = useState(1);
-  const [message, setMessage] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [loginForm, setLoginForm] = useState({
@@ -35,7 +36,21 @@ function App() {
 
   async function fetchAppointments() {
     try {
-      const response = await fetch("http://localhost:5000/appointments");
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch("http://localhost:5000/appointments", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem("adminToken");
+        setIsAdmin(false);
+
+        showNotification("Your session has expired.", "error");
+
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to fetch appointments");
@@ -52,7 +67,7 @@ function App() {
     } catch (error) {
       console.error(error);
       setAppointments([]);
-      setMessage("Failed to load appointments");
+      showNotification("Failed to load appointments", "error");
     }
   }
 
@@ -81,6 +96,14 @@ function App() {
   }
 
   useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+
+    if (token) {
+        setIsAdmin(true);
+    }
+  }, []);
+
+  useEffect(() => {
     fetchAppointments();
   }, []);
 
@@ -88,6 +111,17 @@ function App() {
     document.body.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  function showNotification(text, type = "success") {
+    setNotification({
+      text,
+      type
+    });
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 5800);
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -101,7 +135,11 @@ function App() {
     }));
 
     if (name === "appointment_date") {
-      fetchAvailableSlots(value);
+      if (value >= today) {
+        fetchAvailableSlots(value);
+      } else {
+        setAvailableSlots([]);
+      }
     }
   }
 
@@ -118,14 +156,17 @@ function App() {
   }
 
   function handleLogout() {
+    localStorage.removeItem("adminToken");
     setIsAdmin(false);
-    setMessage("Admin mode disabled");
+    setShowLogoutConfirmation(false);
+    showNotification("Successfully logged out.");
   }
 
   async function handleLogin(event) {
     event.preventDefault();
 
     try {
+      
       const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: {
@@ -146,25 +187,28 @@ function App() {
         login: "",
         password: ""
       });
-      setMessage("Admin mode enabled");
+      localStorage.setItem("adminToken", data.token);
+      fetchAppointments()
+      showNotification("Successfully logged in.");
     } catch (error) {
-      setMessage(error.message);
+      showNotification(error.message, "error");
     }
   }
 
   async function confirmAppointment() {
     try {
-      const payload = {
-        ...form,
-        appointment_slot: Number(form.appointment_slot)
-      };
+      const token = localStorage.getItem("adminToken");
 
       const response = await fetch("http://localhost:5000/appointments", {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...form,
+          appointment_slot: Number(form.appointment_slot)
+        })
       });
 
       if (!response.ok) {
@@ -172,7 +216,7 @@ function App() {
         throw new Error(errorData.error || "Failed to create appointment");
       }
 
-      setMessage("Appointment created successfully!");
+      showNotification("Successfully appointed!");
 
       setForm({
         name: "",
@@ -187,14 +231,18 @@ function App() {
       fetchAppointments();
       setBookingStep(1);
     } catch (error) {
-      setMessage(error.message);
+      showNotification(error.message, "error");
       setShowConfirmation(false);
       console.error(error);
     }
   }
 
   async function deleteAppointment(id) {
+    const token = localStorage.getItem("adminToken");
     await fetch(`http://localhost:5000/appointments/${id}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
       method: "DELETE"
     });
 
@@ -202,9 +250,11 @@ function App() {
   }
 
   async function updateStatus(id, status) {
+    const token = localStorage.getItem("adminToken");
     await fetch(`http://localhost:5000/appointments/${id}/status`, {
       method: "PATCH",
       headers: {
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ status })
@@ -235,7 +285,13 @@ function App() {
     }
   }
 
-  const canGoNextFromStepOne = form.appointment_date;
+  const today = new Date().toISOString().split("T")[0];
+
+  const isDateValid =
+    form.appointment_date &&
+    form.appointment_date >= today;
+
+  const canGoNextFromStepOne = isDateValid;
   const canGoNextFromStepTwo = form.appointment_slot;
 
   const canSubmit =
@@ -268,7 +324,7 @@ function App() {
             <button
               type="button"
               className="login-button logged-in"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirmation(true)}
             >
               Log out
             </button>
@@ -306,6 +362,7 @@ function App() {
                       type="date"
                       value={form.appointment_date}
                       onChange={handleChange}
+                      min={today}
                       required
                     />
                   </label>
@@ -391,19 +448,6 @@ function App() {
                   </label>
 
                   <label>
-                    <span>Email</span>
-
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="john@mail.com"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </label>
-
-                  <label>
                     <span>Phone</span>
 
                     <input
@@ -413,6 +457,19 @@ function App() {
                       value={form.phone}
                       onChange={handleChange}
                       pattern="^\+?[0-9\s\-()]{7,20}$"
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    <span>Email</span>
+
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="john@mail.com"
+                      value={form.email}
+                      onChange={handleChange}
                       required
                     />
                   </label>
@@ -438,8 +495,6 @@ function App() {
               )}
             </form>
           </div>
-
-          {message && <p className="message">{message}</p>}
         </section>
         
         {isAdmin && (
@@ -601,6 +656,45 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {notification && (
+        <div
+          className={`notification notification-${notification.type}`}
+        >
+          {notification.text}
+        </div>
+      )}
+      {showLogoutConfirmation && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowLogoutConfirmation(false)}
+        >
+          <div
+            className="confirmation-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2>Log out</h2>
+
+            <p>
+              Are you sure you want to log out of the administrator account?
+            </p>
+
+            <div className="modal-actions">
+              <button
+                className="modal-confirm-button"
+                onClick={handleLogout}
+              >
+                Log out
+              </button>
+              <button
+                className="modal-cancel-button"
+                onClick={() => setShowLogoutConfirmation(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
