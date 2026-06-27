@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const appointmentSlots = {
   1: "09:00–12:00",
   2: "13:00–16:00",
@@ -37,7 +39,7 @@ function App() {
   async function fetchAppointments() {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("http://localhost:5000/appointments", {
+      const response = await fetch(`${API_URL}/appointments`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -79,7 +81,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/appointments/available-slots?date=${date}`
+        `${API_URL}/appointments/available-slots?date=${date}`
       );
 
       if (!response.ok) {
@@ -167,7 +169,7 @@ function App() {
 
     try {
       
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -199,7 +201,7 @@ function App() {
     try {
       const token = localStorage.getItem("adminToken");
 
-      const response = await fetch("http://localhost:5000/appointments", {
+      const response = await fetch(`${API_URL}/appointments`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -239,7 +241,7 @@ function App() {
 
   async function deleteAppointment(id) {
     const token = localStorage.getItem("adminToken");
-    await fetch(`http://localhost:5000/appointments/${id}`, {
+    await fetch(`${API_URL}/appointments/${id}`, {
       headers: {
         "Authorization": `Bearer ${token}`
       },
@@ -251,7 +253,7 @@ function App() {
 
   async function updateStatus(id, status) {
     const token = localStorage.getItem("adminToken");
-    await fetch(`http://localhost:5000/appointments/${id}/status`, {
+    await fetch(`${API_URL}/appointments/${id}/status`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${token}`,

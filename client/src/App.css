@@ -356,12 +356,12 @@ body.dark input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .appointment-main {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .appointment-contact {
-    margin-top: auto;
+  margin-top: auto;
 }
 
 .status-badge {

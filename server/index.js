@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
 
+const PORT = process.env.PORT || 5000;
+
 const APPOINTMENT_SLOTS = {
     1: "09:00–12:00",
     2: "13:00–16:00",
@@ -346,6 +348,6 @@ app.patch("/appointments/:id/status", authenticateAdmin, async (req, res) => {
     }
 });
 
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
