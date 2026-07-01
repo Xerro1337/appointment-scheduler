@@ -1,3 +1,4 @@
+[![Maintainability](https://qlty.sh/gh/Xerro1337/projects/appointment-scheduler/maintainability.svg)](https://qlty.sh/gh/Xerro1337/projects/appointment-scheduler)
 # Appointment Scheduler
 
 ## Описание проекта
